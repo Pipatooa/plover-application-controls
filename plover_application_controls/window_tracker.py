@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 from threading import Thread
 from typing import Callable, Tuple
@@ -11,13 +13,20 @@ except ImportError:
     from pywinctl import getActiveWindow, BaseWindow
 
 
+SLOW_PLATFORMS = {"darwin"}
+
+
 class WindowTracker:
     _t = None
     _run = 0
 
-    CHECK_INTERVAL = 0.25
+    if sys.platform in SLOW_PLATFORMS:
+        CHECK_INTERVAL = 0.25
+    else:
+        CHECK_INTERVAL = 0.1
 
     current_window = None
+    current_handle_hash = None
     current_app = ""
     current_class = ""
     current_title = ""
@@ -26,12 +35,22 @@ class WindowTracker:
 
     @staticmethod
     def check_active_window() -> None:
+        old_handle_hash = WindowTracker.current_handle_hash
+        old_title = WindowTracker.current_title
+
         try:
             WindowTracker.current_window = getActiveWindow()
-            WindowTracker.current_title = WindowTracker.current_window.title
+            WindowTracker._get_window_properties()
         except:
-            WindowTracker.current_window = None
-            WindowTracker.current_title = ""
+            WindowTracker._unset_window()
+
+        change = old_handle_hash != WindowTracker.current_handle_hash or old_title != WindowTracker.current_title
+        WindowTracker._trigger_callbacks(change)
+
+    @staticmethod
+    def _get_window_properties() -> None:
+        handle = WindowTracker.current_window.getHandle()
+        WindowTracker.current_handle_hash = hash(handle)
 
         try:
             WindowTracker.current_app = WindowTracker.current_window.getAppName()
@@ -39,13 +58,30 @@ class WindowTracker:
             WindowTracker.current_app = ""
 
         try:
-            WindowTracker.current_class = WindowTracker.current_window.getHandle().get_wm_class()[0]
+            WindowTracker.current_class = handle.get_wm_class()[0]
         except:
             WindowTracker.current_class = ""
 
-        callback_contents = (WindowTracker.current_app, WindowTracker.current_class, WindowTracker.current_title)
-        for callback in WindowTracker._callbacks:
-            callback(WindowTracker.current_window, callback_contents)
+        try:
+            WindowTracker.current_title = WindowTracker.current_window.title
+        except:
+            WindowTracker.current_title = ""
+
+    @staticmethod
+    def _unset_window() -> None:
+        WindowTracker.current_window = None
+        WindowTracker.current_handle_hash = hash(None)
+        WindowTracker.current_app = ""
+        WindowTracker.current_class = ""
+        WindowTracker.current_title = ""
+
+    @staticmethod
+    def _trigger_callbacks(change: bool) -> None:
+        details = (WindowTracker.current_app, WindowTracker.current_class, WindowTracker.current_title)
+        for on_change, callback in WindowTracker._callbacks:
+            if on_change and not change:
+                continue
+            callback(WindowTracker.current_window, WindowTracker.current_handle_hash, details)
 
     @staticmethod
     def _thread_work(run) -> None:
@@ -71,9 +107,9 @@ class WindowTracker:
         WindowTracker.start()
 
     @staticmethod
-    def add_callback(callback: Callable[[BaseWindow, Tuple[str, str, str]], None]) -> None:
-        WindowTracker._callbacks.append(callback)
+    def add_callback(on_change: bool, callback: Callable[[BaseWindow | None, int, Tuple[str, str, str]], None]) -> None:
+        WindowTracker._callbacks.append((on_change, callback))
 
     @staticmethod
-    def remove_change_callback(callback: Callable[[BaseWindow, Tuple[str, str, str]], None]) -> None:
-        WindowTracker._callbacks.remove(callback)
+    def remove_callback(on_change: bool, callback: Callable[[BaseWindow | None, int, Tuple[str, str, str]], None]) -> None:
+        WindowTracker._callbacks.remove((on_change, callback))
