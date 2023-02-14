@@ -4,7 +4,10 @@ from plover_application_controls.window_tracker import WindowTracker
 
 
 def command(engine: StenoEngine, arg: str) -> None:
-    subcommand, *args = arg.split(":")
+    split_args = arg.split(":")
+    if len(split_args) == 0:
+        raise KeyError("No subcommand specified")
+    subcommand, *args = split_args
     _COMMAND_MAP[subcommand](*args)
 
 
@@ -89,7 +92,7 @@ _COMMAND_MAP = {
     "show": show,
     "activate": activate,
     "resize": resize,
-    "resizeTo": resize_to
+    "resizeTo": resize_to,
     "move": move,
     "move_to": move_to,
     "raise_window": raise_window,
