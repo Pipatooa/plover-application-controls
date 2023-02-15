@@ -7,7 +7,7 @@ Can also be used by other plugins to track the currently active window.
 
 Navigate to the installation directory for Plover and open a terminal / command prompt.
 
-> Run: `<exe_name> -s plover_plugins install -e plover-application-dictionary`
+> Run: `<exe_name> -s plover_plugins install -e plover-application-controls`
 
 Restart Plover.
 
