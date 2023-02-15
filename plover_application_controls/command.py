@@ -4,10 +4,9 @@ from plover_application_controls.window_tracker import WindowTracker
 
 
 def command(engine: StenoEngine, arg: str) -> None:
-    split_args = arg.split(":")
-    if len(split_args) == 0:
+    subcommand, *args = arg.split(":")
+    if not subcommand:
         raise KeyError("No subcommand specified")
-    subcommand, *args = split_args
     _COMMAND_MAP[subcommand](*args)
 
 
