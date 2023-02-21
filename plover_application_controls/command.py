@@ -91,7 +91,7 @@ _COMMAND_MAP = {
     "show": show,
     "activate": activate,
     "resize": resize,
-    "resizeTo": resize_to,
+    "resize_to": resize_to,
     "move": move,
     "move_to": move_to,
     "raise_window": raise_window,
@@ -99,5 +99,5 @@ _COMMAND_MAP = {
     "always_on_top": always_on_top,
     "always_on_bottom": always_on_bottom,
     "send_behind": send_behind,
-    "acceptInput": accept_input
+    "accept_input": accept_input
 }
