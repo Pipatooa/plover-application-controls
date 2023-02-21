@@ -1,3 +1,1 @@
-from plover_application_controls.window_tracker import WindowTracker
-from plover_application_controls.window_details import WindowDetails
 from plover_application_controls.extension import ApplicationControlExtension

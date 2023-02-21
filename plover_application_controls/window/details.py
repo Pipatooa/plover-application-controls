@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+
+from plover_application_controls.pywinctl import BaseWindow
 
 
 @dataclass
 class WindowDetails:
     handle_hash: int
+    window: BaseWindow | None
+
     app_name: str
     class_name: str
     title: str

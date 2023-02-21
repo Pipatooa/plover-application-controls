@@ -1,6 +1,6 @@
 from plover.formatting import _Context, _Action
 
-from plover_application_controls.window_tracker import WindowTracker
+from plover_application_controls.window.tracker import WindowTracker
 
 
 def meta(ctx: _Context, cmdline: str) -> _Action:

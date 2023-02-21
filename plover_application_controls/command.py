@@ -1,6 +1,7 @@
 from plover.engine import StenoEngine
 
-from plover_application_controls.window_tracker import WindowTracker
+from plover_application_controls.window.history import WindowHistory
+from plover_application_controls.window.tracker import WindowTracker
 
 
 def command(engine: StenoEngine, arg: str) -> None:
@@ -8,6 +9,24 @@ def command(engine: StenoEngine, arg: str) -> None:
     if not subcommand:
         raise KeyError("No subcommand specified")
     _COMMAND_MAP[subcommand](*args)
+
+
+def tab(n: str, initial_sync: bool = False) -> None:
+    cycle(n, initial_sync)
+    WindowHistory.stop_cycle()
+
+
+def cycle(n: str, initial_sync: bool = False) -> None:
+    n = int(n)
+    WindowHistory.cycle_by(n, initial_sync)
+
+
+def stop_cycle() -> None:
+    WindowHistory.stop_cycle()
+
+
+def sync_history() -> None:
+    WindowHistory.sync_windows()
 
 
 def close() -> None:
@@ -83,6 +102,10 @@ def accept_input(value: bool = None) -> None:
 
 
 _COMMAND_MAP = {
+    "tab": tab,
+    "cycle": cycle,
+    "stop_cycle": stop_cycle,
+    "sync_history": sync_history,
     "close": close,
     "minimize": minimize,
     "maximize": maximize,

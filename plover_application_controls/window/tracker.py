@@ -1,18 +1,15 @@
 from __future__ import annotations
 
+import sys
 import time
 from threading import Thread
 from typing import Callable
 
-from plover_application_controls.window_details import WindowDetails
+from plover.log import info
 
-try:
-    from pywinctl import getActiveWindow, BaseWindow
-except ImportError:
-    import sys
-    import plover_application_controls.fake_tk as tkinter
-    sys.modules["tkinter"] = tkinter
-    from pywinctl import getActiveWindow, BaseWindow
+from plover_application_controls.pywinctl import getActiveWindow, BaseWindow
+from plover_application_controls.window.history import WindowHistory
+from plover_application_controls.window.details import WindowDetails
 
 
 SLOW_PLATFORMS = {"darwin"}
@@ -28,7 +25,7 @@ class WindowTracker:
         CHECK_INTERVAL = 0.1
 
     UNKNOWN = "UNKNOWN"
-    BLANK_DETAILS = WindowDetails(hash(None), UNKNOWN, UNKNOWN, UNKNOWN)
+    BLANK_DETAILS = WindowDetails(hash(None), None, UNKNOWN, UNKNOWN, UNKNOWN)
 
     current_window = None
     current_window_details = BLANK_DETAILS
@@ -42,11 +39,14 @@ class WindowTracker:
         try:
             WindowTracker.current_window = getActiveWindow()
             WindowTracker._get_window_properties()
-        except:
+        except Exception as e:
+            info(f"{e}")
             WindowTracker.current_window = None
             WindowTracker.current_window_details = WindowTracker.BLANK_DETAILS
 
         change = old_details != WindowTracker.current_window_details
+        if change and WindowTracker.current_window is not None:
+            WindowHistory.push(WindowTracker.current_window_details)
         WindowTracker._trigger_callbacks(change)
 
     @staticmethod
@@ -68,7 +68,10 @@ class WindowTracker:
         except:
             title = WindowTracker.UNKNOWN
 
-        WindowTracker.current_window_details = WindowDetails(hash(handle), app_name, class_name, title)
+        WindowTracker.current_window_details = WindowDetails(
+            hash(handle), WindowTracker.current_window,
+            app_name, class_name, title
+        )
 
     @staticmethod
     def _trigger_callbacks(change: bool) -> None:
