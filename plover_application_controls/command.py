@@ -1,4 +1,5 @@
 from plover.engine import StenoEngine
+from plover.misc import boolean
 
 from plover_application_controls.window.history import WindowHistory
 from plover_application_controls.window.tracker import WindowTracker
@@ -11,13 +12,14 @@ def command(engine: StenoEngine, arg: str) -> None:
     _COMMAND_MAP[subcommand](*args)
 
 
-def tab(n: str, initial_sync: bool = False) -> None:
+def tab(n: str, initial_sync: str = "false") -> None:
     cycle(n, initial_sync)
     WindowHistory.stop_cycle()
 
 
-def cycle(n: str, initial_sync: bool = False) -> None:
+def cycle(n: str, initial_sync: str = "false") -> None:
     n = int(n)
+    initial_sync = boolean(initial_sync)
     WindowHistory.cycle_by(n, initial_sync)
 
 
